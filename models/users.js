@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
     required: false,
     type: String,
   },
+  activity: {
+    type: Map,
+    of: String,
+    required: false,
+  },
+  last_login: Date,
 });
 
 const User = mongoose.model("Users", userSchema);

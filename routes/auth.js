@@ -8,6 +8,9 @@ const { User } = require("../models/users");
 const auth = require("../middleware/auth");
 const FormData = require("form-data");
 const fs = require("fs");
+const moment = require("moment");
+
+const date_format = "DD/MM/YYYY";
 
 const schema = {
   email: Joi.string().email().required(),
@@ -21,6 +24,9 @@ router.post("/", validateWith(schema), async (req, res) => {
 
   if (!user || password !== db_pass)
     return res.status(400).send({ error: "Invalid email or password." });
+
+  user.last_login = Date.now();
+  await user.save();
 
   const token = jwt.sign(
     {
@@ -48,4 +54,29 @@ router.get("/ProfileImage", auth, async (req, res) => {
   res.status(200).send(imageData);
 });
 
+router.put("/userLeft", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  let activity = {};
+  if (user.activity) activity = user.activity;
+  const today = moment().format(date_format);
+  if (!(today in activity)) activity[today] = "0";
+  const diff = moment().diff(moment(user.last_login), "minute");
+  activity[today] = (parseInt(activity[today]) + diff).toString();
+  user.activity = activity;
+  await user.save();
+  res.status(200).send("user activity has been updated.");
+});
+
+router.get("/activity", auth, async (req, res) => {
+  const ACTIVITY_DAYS = 7;
+  const user = await User.findById(req.user.userId);
+  const activities = [];
+  const user_activity = user.activity.toJSON();
+  for (let i = 1; i <= ACTIVITY_DAYS; i++) activities.push(0);
+  for (let day in user_activity) {
+    const index = moment().diff(moment(day, date_format), "days");
+    if (index < ACTIVITY_DAYS) activities[index] = parseInt(user_activity[day]);
+  }
+  res.status(200).send(activities);
+});
 module.exports = router;
