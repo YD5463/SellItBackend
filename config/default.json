@@ -1,4 +1,5 @@
 {
   "delay": 0,
-  "maxImageCount": 3
+  "maxImageCount": 3,
+  "salt_rounds":10
 }

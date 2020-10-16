@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 5,
-    maxlength: 30,
+    maxlength: 200,
   },
   expoPushToken: {
     required: false,
@@ -32,6 +32,18 @@ const userSchema = new mongoose.Schema({
     required: false,
   },
   last_login: Date,
+  bio: {
+    type: String,
+    maxlength: 100,
+    minlength: 1,
+  },
+  phone_number: {
+    type: String,
+  },
+  gender: {
+    type: String,
+    enum: ["male", "female"],
+  },
 });
 
 const User = mongoose.model("Users", userSchema);
@@ -41,6 +53,11 @@ const schema = {
   email: Joi.string().email().required(),
   password: Joi.string().required().min(5),
   image_path: Joi.string(),
+  bio: Joi.string().max(100),
+  phone_number: Joi.string()
+    .length(10)
+    .regex(/^[0-9]+$/)
+    .required(),
 };
 
 exports.User = User;

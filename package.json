@@ -22,6 +22,7 @@
     "form-data": "^3.0.0",
     "helmet": "^3.22.0",
     "joi": "^14.3.1",
+    "joi-phone-number": "^4.1.2",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.27.0",
     "mongoose": "^5.10.2",

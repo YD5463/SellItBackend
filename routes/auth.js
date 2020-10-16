@@ -9,7 +9,7 @@ const auth = require("../middleware/auth");
 const FormData = require("form-data");
 const fs = require("fs");
 const moment = require("moment");
-
+const bcrypt= require("bcrypt");
 const date_format = "DD/MM/YYYY";
 
 const schema = {
@@ -22,7 +22,8 @@ router.post("/", validateWith(schema), async (req, res) => {
   const user = await User.findOne({ email });
   const db_pass = user.password;
 
-  if (!user || password !== db_pass)
+  const password_match = await bcrypt.compare(password, db_pass);
+  if (!user || !password_match)
     return res.status(400).send({ error: "Invalid email or password." });
 
   user.last_login = Date.now();
@@ -46,9 +47,10 @@ router.get("/ProfileImage", auth, async (req, res) => {
     return res.status(204).send("the user dos'nt have profile image");
   const imageData = new FormData();
   fs.readFile(
-    path.resolve("uploads", req.user.profile_image + ".png"),
+    path.resolve("uploads", "afe1a88696e5bad276631fe8f61fef8d.png"), //req.user.profile_image + ".png"),
     (err, data) => {
       if (!err) imageData.append("image", data);
+      if (err) console.log("error sending", err);
     }
   );
   res.status(200).send(imageData);
