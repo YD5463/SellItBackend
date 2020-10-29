@@ -5,7 +5,7 @@ const { schema, User } = require("../models/users");
 const multer = require("multer");
 const auth = require("../middleware/auth");
 const bcrypt = require("bcrypt");
-
+const { sendValidationCodeToEmail } = require("../utilities/mailer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -18,6 +18,7 @@ router.post(
   upload.single("profile_image"),
   validateWith(schema),
   async (req, res) => {
+    console.log("im here");
     const { name, email, password } = req.body;
     let user = await User.findOne({ email });
     if (user)
@@ -25,11 +26,11 @@ router.post(
         .status(400)
         .send({ error: "A user with the given email already exists." });
     const hashed_pass = await bcrypt.hash(password, 10);
-    user = { name, email, password:hashed_pass };
-    user.profile_image = req.file?req.file.filename:null;
-
+    user = { name, email, password: hashed_pass };
+    user.profile_image = req.file ? req.file.filename : null;
     try {
       user = await User.create(user);
+      sendValidationCodeToEmail(email,user);
       res.status(201).send(user);
     } catch (e) {
       console.log(e);

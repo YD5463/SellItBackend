@@ -9,7 +9,8 @@ const auth = require("../middleware/auth");
 const FormData = require("form-data");
 const fs = require("fs");
 const moment = require("moment");
-const bcrypt= require("bcrypt");
+const bcrypt = require("bcrypt");
+const {sendValidationCodeToEmail} = require("../utilities/mailer");
 const date_format = "DD/MM/YYYY";
 
 const schema = {
@@ -17,13 +18,37 @@ const schema = {
   password: Joi.string().required().min(5),
 };
 
+
+
+router.get("/send_velidation_code", auth, (req, res) => {
+  sendValidationCodeToEmail(req.user.email, req.user);
+  res.status(200).send("code sent");
+});
+
+const code_schema = { code: Joi.string().required() };
+router.post(
+  "/validate_email",
+  [validateWith(code_schema), auth],
+  async (req, res) => {
+    const user = await User.findOne({ email: req.user.email });
+    if (user.is_email_verified)
+      return res.status(200).send("email already verified!");
+    const diff = Date.now() - user.verify_code_time;
+    if (req.body.code === user.verify_code && (diff / (60 * 1000)) % 60 < 10) {
+      user.is_email_verified = true;
+      await user.save();
+      return res.status(200).send("Email verified succfully.");
+    }
+    res.status(400).send("code is expired or worng!");
+  }
+);
 router.post("/", validateWith(schema), async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  const db_pass = user.password;
-
-  const password_match = await bcrypt.compare(password, db_pass);
-  if (!user || !password_match)
+  if (!user)
+    return res.status(400).send({ error: "Invalid email or password." });
+  const password_match = await bcrypt.compare(password, user.password);
+  if (!password_match)
     return res.status(400).send({ error: "Invalid email or password." });
 
   user.last_login = Date.now();
@@ -38,6 +63,7 @@ router.post("/", validateWith(schema), async (req, res) => {
     },
     "jwtPrivateKey"
   );
+  sendValidationCodeToEmail(email, user);
   res.send(token);
 });
 
