@@ -21,4 +21,14 @@ const sendValidationCodeToEmail = async (email, user) => {
   user.verify_code_time = Date.now();
   await user.save();
 };
+
+const sendNewListingEmail = async (listing, email) => {
+  const info = await transporter.sendMail({
+    from: '"SellIt support system" <sellIt@gmail.com>',
+    to: email,
+    subject: "New Listing Was Added",
+    html: `Listing: <br> ${listing}`,
+  });
+};
 exports.sendValidationCodeToEmail = sendValidationCodeToEmail;
+exports.sendNewListingEmail = sendNewListingEmail;

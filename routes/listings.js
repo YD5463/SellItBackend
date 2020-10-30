@@ -10,6 +10,7 @@ const listingMapper = require("../mappers/listings");
 const config = require("config");
 const { Categories } = require("../models/categories");
 const { schema, Listings } = require("../models/listings");
+const { sendNewListingEmail } = require("../utilities/mailer");
 
 const upload = multer({
   dest: "uploads/",
@@ -39,7 +40,7 @@ router.post(
     // if the request is invalid, we'll end up with one or more image files
     // stored in the uploads folder. We'll need to clean up this folder
     // using a separate process.
-    // auth,
+    auth,
     upload.array("images", config.get("maxImageCount")),
     validateWith(schema),
     validateCategoryId,
@@ -58,7 +59,7 @@ router.post(
     if (req.user) listing.userId = req.user.userId;
 
     listing = await Listings.create(listing);
-
+    sendNewListingEmail(listing, req.user.email);
     res.status(201).send(listing);
   }
 );
