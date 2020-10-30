@@ -20,6 +20,7 @@
     "expo-server-sdk": "^3.5.0",
     "express": "^4.17.1",
     "form-data": "^3.0.0",
+    "generate-password": "^1.5.1",
     "helmet": "^3.22.0",
     "joi": "^14.3.1",
     "joi-phone-number": "^4.1.2",

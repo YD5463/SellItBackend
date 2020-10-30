@@ -10,61 +10,58 @@ const FormData = require("form-data");
 const fs = require("fs");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
-const {sendValidationCodeToEmail} = require("../utilities/mailer");
+const { sendValidationCodeToEmail } = require("../utilities/mailer");
 const date_format = "DD/MM/YYYY";
 
 const schema = {
   email: Joi.string().email().required(),
   password: Joi.string().required().min(5),
 };
-
-
-
+const generate_token = (user) => {
+  const token = jwt.sign(
+    {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      profile_image: user.profile_image,
+    },
+    "jwtPrivateKey"
+  );
+  return token;
+};
 router.get("/send_velidation_code", auth, (req, res) => {
   sendValidationCodeToEmail(req.user.email, req.user);
   res.status(200).send("code sent");
 });
 
 const code_schema = { code: Joi.string().required() };
-router.post(
-  "/validate_email",
-  [validateWith(code_schema), auth],
-  async (req, res) => {
-    const user = await User.findOne({ email: req.user.email });
-    if (user.is_email_verified)
-      return res.status(200).send("email already verified!");
-    const diff = Date.now() - user.verify_code_time;
-    if (req.body.code === user.verify_code && (diff / (60 * 1000)) % 60 < 10) {
-      user.is_email_verified = true;
-      await user.save();
-      return res.status(200).send("Email verified succfully.");
-    }
-    res.status(400).send("code is expired or worng!");
+router.post("/validate_email", validateWith(code_schema), async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) return res.status(400).send("user not exists");
+  if (user.is_email_verified)
+    return res.status(200).send("email already verified!");
+  const diff = Date.now() - user.verify_code_time;
+  if (req.body.code === user.verify_code && (diff / (60 * 1000)) % 60 < 10) {
+    user.is_email_verified = true;
+    await user.save();
+    return res.status(200).send(generate_token(user));
   }
-);
+  res.status(400).send("code is expired or worng!");
+});
 router.post("/", validateWith(schema), async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user)
     return res.status(400).send({ error: "Invalid email or password." });
+
   const password_match = await bcrypt.compare(password, user.password);
   if (!password_match)
     return res.status(400).send({ error: "Invalid email or password." });
-
   user.last_login = Date.now();
   await user.save();
-
-  const token = jwt.sign(
-    {
-      userId: user._id,
-      name: user.name,
-      email,
-      profile_image: user.profile_image,
-    },
-    "jwtPrivateKey"
-  );
+  if (user.is_email_verified) return res.status(200).send(generate_token(user));
   sendValidationCodeToEmail(email, user);
-  res.send(token);
+  res.send("user created, please validate your email to get the token");
 });
 
 router.get("/ProfileImage", auth, async (req, res) => {

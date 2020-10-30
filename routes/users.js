@@ -1,11 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const validateWith = require("../middleware/validation");
-const { schema, User } = require("../models/users");
+const {
+  schema,
+  User,
+  change_pass_schema,
+  edit_profile_schema,
+  change_subscription_schema,
+  forgot_password_schema,
+} = require("../models/users");
 const multer = require("multer");
 const auth = require("../middleware/auth");
 const bcrypt = require("bcrypt");
-const { sendValidationCodeToEmail } = require("../utilities/mailer");
+const password_generator = require("generate-password");
+const {
+  sendValidationCodeToEmail,
+  sendNewPassword,
+} = require("../utilities/mailer");
+const config = require("config");
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -15,23 +28,21 @@ const upload = multer({ storage });
 
 router.post(
   "/",
-  upload.single("profile_image"),
-  validateWith(schema),
+  [upload.single("profile_image"), validateWith(schema)],
   async (req, res) => {
-    console.log("im here");
     const { name, email, password } = req.body;
     let user = await User.findOne({ email });
     if (user)
       return res
         .status(400)
         .send({ error: "A user with the given email already exists." });
-    const hashed_pass = await bcrypt.hash(password, 10);
+    const hashed_pass = await bcrypt.hash(password, config.get("salt_rounds"));
     user = { name, email, password: hashed_pass };
     user.profile_image = req.file ? req.file.filename : null;
     try {
       user = await User.create(user);
-      sendValidationCodeToEmail(email,user);
-      res.status(201).send(user);
+      sendValidationCodeToEmail(email, user);
+      res.status(201).send("the user was succfully added.");
     } catch (e) {
       console.log(e);
       return res
@@ -41,17 +52,45 @@ router.post(
   }
 );
 
-router.put("/change_password", auth, async (req, res) => {
-  const user = await User.findById(req.user.userId);
-  if (user.password !== req.body.curr_password)
-    return res.status(400).send("current password is invalid");
-  else if (user.password === req.body.new_password)
-    return res.status(400).send("the new password is the same as the previos");
-  console.log(user);
-  user.password = req.body.new_password;
-  await user.save();
-  res.status(200).send("password was changed succfully");
-});
+router.put(
+  "/forgot_password",
+  validateWith(forgot_password_schema),
+  async (req, res) => {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user)
+      return res.status(404).send("the user with the given email not exists");
+    if (!user.is_email_verified)
+      return res.status(401).send("email not verified");
+    const new_password = password_generator.generate({
+      length: 8,
+      numbers: true,
+    });
+    const hashed_pass = await bcrypt.hash(
+      new_password,
+      config.get("salt_rounds")
+    );
+    user.password = hashed_pass;
+    await user.save();
+    sendNewPassword(new_password, user.email);
+    res.status(200).send("A new password was sent to your email.");
+  }
+);
+router.put(
+  "/change_password",
+  [auth, validateWith(change_pass_schema)],
+  async (req, res) => {
+    const user = await User.findById(req.user.userId);
+    if (user.password !== req.body.curr_password)
+      return res.status(400).send("current password is invalid");
+    else if (user.password === req.body.new_password)
+      return res
+        .status(400)
+        .send("the new password is the same as the previos");
+    user.password = req.body.new_password;
+    await user.save();
+    res.status(200).send("password was changed succfully");
+  }
+);
 
 //delete this when done with debug
 router.get("/", async (req, res) => {
@@ -59,14 +98,27 @@ router.get("/", async (req, res) => {
   res.send(users);
 });
 
-router.put("/edit_profile", auth, async (req, res) => {
-  const user = await User.findById(req.user.userId);
-  const fields = ["email", "name", "bio", "gender", "phone_number"];
-  fields.forEach((field) => {
-    if (req.body[field]) user[field] = req.body[field];
-  });
-  await user.save();
-  res.status(200).send("user details was updated succfully");
-});
+router.put(
+  "/edit_profile",
+  [auth, validateWith(edit_profile_schema)],
+  async (req, res) => {
+    const user = await User.findById(req.user.userId);
+    const fields = ["name", "bio", "gender", "phone_number"];
+    fields.forEach((field) => {
+      if (req.body[field]) user[field] = req.body[field];
+    });
+    await user.save();
+    res.status(200).send("user details was updated succfully");
+  }
+);
 
+router.put(
+  "/change_subscription_type",
+  [auth, validateWith(change_subscription_schema)],
+  async (req, res) => {
+    const user = await User.findById(req.user.userId);
+    user.subscribe = req.body.subscribe;
+    res.status(200).send("subscription was changed succfully");
+  }
+);
 module.exports = router;

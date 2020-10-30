@@ -59,7 +59,7 @@ router.post(
     if (req.user) listing.userId = req.user.userId;
 
     listing = await Listings.create(listing);
-    sendNewListingEmail(listing, req.user.email);
+    sendNewListingEmail(listing, req.user.userId);
     res.status(201).send(listing);
   }
 );
