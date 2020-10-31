@@ -13,6 +13,17 @@ router.get("/profileImage/:userId", async (req, res) => {
   res.sendFile(path.resolve("uploads", user.profile_image));
 });
 
+router.get("/", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  res
+    .status(200)
+    .send({
+      userId: user._id,
+      email: user.email,
+      name: user.name,
+      profile_image: user.profile_image !== null,
+    });
+});
 router.get("/:id", auth, async (req, res) => {
   const userId = req.params.id;
   if (!mongoose.isValidObjectId(userId))
@@ -21,8 +32,8 @@ router.get("/:id", auth, async (req, res) => {
   if (!user) return res.status(404).send("user not exists");
 
   const listings = await Listings.find({ userId });
-  res.send({
-    id: user.id,
+  res.status(200).send({
+    id: user._id,
     name: user.name,
     email: user.email,
     listings: listings.length,
