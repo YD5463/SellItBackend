@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const validateWith = require("../middleware/validation");
+const multer = require("multer");
+const auth = require("../middleware/auth");
+const bcrypt = require("bcrypt");
+const password_generator = require("generate-password");
 const {
   schema,
   User,
@@ -9,10 +13,7 @@ const {
   change_subscription_schema,
   forgot_password_schema,
 } = require("../models/users");
-const multer = require("multer");
-const auth = require("../middleware/auth");
-const bcrypt = require("bcrypt");
-const password_generator = require("generate-password");
+
 const {
   sendValidationCodeToEmail,
   sendNewPassword,
@@ -80,13 +81,20 @@ router.put(
   [auth, validateWith(change_pass_schema)],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
-    if (user.password !== req.body.curr_password)
+    const curr_pass_match = await bcrypt.compare(
+      req.body.curr_password,
+      user.password
+    );
+    if (!curr_pass_match)
       return res.status(400).send("current password is invalid");
-    else if (user.password === req.body.new_password)
+    else if (req.body.curr_password === req.body.new_password)
       return res
         .status(400)
         .send("the new password is the same as the previos");
-    user.password = req.body.new_password;
+    user.password = await bcrypt.hash(
+      req.body.new_password,
+      config.get("salt_rounds")
+    );
     await user.save();
     res.status(200).send("password was changed succfully");
   }
