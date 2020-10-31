@@ -1,13 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const validateWith = require("../middleware/validation");
 const { User } = require("../models/users");
 const auth = require("../middleware/auth");
-const FormData = require("form-data");
-const fs = require("fs");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const { sendValidationCodeToEmail } = require("../utilities/mailer");
@@ -62,21 +59,6 @@ router.post("/", validateWith(schema), async (req, res) => {
   if (user.is_email_verified) return res.status(200).send(generate_token(user));
   sendValidationCodeToEmail(email, user);
   res.send("user created, please validate your email to get the token");
-});
-
-router.get("/ProfileImage", auth, async (req, res) => {
-  console.log("im here");
-  if (!req.user.profile_image)
-    return res.status(204).send("the user dos'nt have profile image");
-  const imageData = new FormData();
-  fs.readFile(
-    path.resolve("uploads", "afe1a88696e5bad276631fe8f61fef8d.png"), //req.user.profile_image + ".png"),
-    (err, data) => {
-      if (!err) imageData.append("image", data);
-      if (err) console.log("error sending", err);
-    }
-  );
-  res.status(200).send(imageData);
 });
 
 router.put("/userLeft", auth, async (req, res) => {
