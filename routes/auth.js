@@ -27,7 +27,8 @@ const generate_token = (user) => {
   return token;
 };
 router.get("/send_velidation_code", auth, (req, res) => {
-  sendValidationCodeToEmail(req.user.email, req.user);
+  const user = User.findById(req.user.userId);
+  sendValidationCodeToEmail(user.email, req.user);
   res.status(200).send("code sent");
 });
 
