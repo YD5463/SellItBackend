@@ -55,8 +55,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  subscribeId: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+  },
   subscribe: {
+    //delete this after integrate the subscribe table
     type: String,
+    required: true,
     enum: subscribe_options,
     default: "marketing",
   },
