@@ -15,14 +15,15 @@ router.get("/profileImage/:userId", async (req, res) => {
 
 router.get("/", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
-  res
-    .status(200)
-    .send({
-      userId: user._id,
-      email: user.email,
-      name: user.name,
-      profile_image: user.profile_image !== null,
-    });
+  res.status(200).send({
+    userId: user._id,
+    email: user.email,
+    name: user.name,
+    bio: user.bio,
+    phone_number: user.phone_number,
+    gender: user.gender,
+    profile_image: user.profile_image !== null,
+  });
 });
 router.get("/:id", auth, async (req, res) => {
   const userId = req.params.id;

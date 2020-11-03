@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 
 const subscribe_options = ["marketing", "updates", "non"];
-const gender_options = ["male", "female"];
+const gender_options = ["male", "female", "decline"];
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: gender_options,
+    required: false,
+    default: "decline",
   },
   verify_code: String,
   verify_code_time: Date,
@@ -69,15 +71,17 @@ const schema = {
   image_path: Joi.string(),
   bio: Joi.string().max(100),
   phone_number: Joi.string()
-    .length(10)
-    .regex(/^[0-9]+$/)
+    .regex(
+      /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/
+    )
     .required(),
   gender: Joi.string().valid(gender_options),
 };
 const edit_profile_schema = {
   name: schema.name,
-  bio: schema.bio.required(),
-  gender: schema.gender.required(),
+  bio: schema.bio,
+  email: schema.email,
+  gender: schema.gender,
   phone_number: schema.phone_number,
 };
 
