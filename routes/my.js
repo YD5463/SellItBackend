@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
-const listingMapper = require("../mappers/listings");
+const listingMapper = require("../utilities/mapper");
 const { Listings } = require("../models/listings");
 
 router.get("/listings", auth, async(req, res) => {

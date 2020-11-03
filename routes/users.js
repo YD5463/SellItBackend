@@ -22,17 +22,22 @@ const {
 } = require("../utilities/mailer");
 const config = require("config");
 const imageResize = require("../middleware/imageResize");
+const { mapImageToUrl } = require("../utilities/mapper");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
 });
-const upload = multer({ storage });
+const upload = multer({ storage, limits: { fieldSize: 25 * 1024 * 1024 } });
 
 router.post(
   "/",
-  [upload.single("profile_image"), validateWith(schema)],
+  [
+    upload.single("profile_image"),
+    validateWith(schema),
+    imageResize.resize_profile_image,
+  ],
   async (req, res) => {
     const { name, email, password, phone_number } = req.body;
     let user = await User.findOne({ email });
@@ -115,7 +120,7 @@ router.put(
     auth,
     upload.single("profile_image"),
     validateWith(edit_profile_schema),
-    //imageResize,
+    imageResize.resize_profile_image,
   ],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
@@ -124,8 +129,11 @@ router.put(
       if (req.body[field]) user[field] = req.body[field];
     });
     if (req.file) {
-      if (user.profile_image)
-        fs.unlink(`uploads/${user.profile_image}`, (err) => console.log(err));
+      if (user.profile_image) {
+        Object.values(mapImageToUrl(user.profile_image)).forEach((file) =>
+          fs.unlink(file, (err) => console.log(err))
+        );
+      }
       user.profile_image = req.file.filename;
     }
     await user.save();

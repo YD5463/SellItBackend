@@ -5,8 +5,7 @@ const multer = require("multer");
 const validateWith = require("../middleware/validation");
 const auth = require("../middleware/auth");
 const imageResize = require("../middleware/imageResize");
-// const delay = require("../middleware/delay");
-const listingMapper = require("../mappers/listings");
+const mapper = require("../utilities/mapper");
 const config = require("config");
 const { Categories } = require("../models/categories");
 const { schema, Listings } = require("../models/listings");
@@ -26,7 +25,7 @@ const validateCategoryId = async (req, res, next) => {
 
 router.get("/", async (req, res) => {
   const listings = await Listings.find().select("-__v");
-  const resources = listings.map(listingMapper);
+  const resources = listings.map(mapper.mapListings);
   res.send(resources);
 });
 
@@ -44,7 +43,7 @@ router.post(
     upload.array("images", config.get("maxImageCount")),
     validateWith(schema),
     validateCategoryId,
-    imageResize,
+    imageResize.resize_images,
   ],
 
   async (req, res) => {
