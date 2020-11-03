@@ -5,6 +5,8 @@ const multer = require("multer");
 const auth = require("../middleware/auth");
 const bcrypt = require("bcrypt");
 const password_generator = require("generate-password");
+const fs = require("fs");
+
 const {
   schema,
   User,
@@ -19,6 +21,7 @@ const {
   sendNewPassword,
 } = require("../utilities/mailer");
 const config = require("config");
+const imageResize = require("../middleware/imageResize");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -31,14 +34,14 @@ router.post(
   "/",
   [upload.single("profile_image"), validateWith(schema)],
   async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone_number } = req.body;
     let user = await User.findOne({ email });
     if (user)
       return res
         .status(400)
         .send({ error: "A user with the given email already exists." });
     const hashed_pass = await bcrypt.hash(password, config.get("salt_rounds"));
-    user = { name, email, password: hashed_pass };
+    user = { name, email, password: hashed_pass, phone_number };
     user.profile_image = req.file ? req.file.filename : null;
     try {
       user = await User.create(user);
@@ -108,13 +111,23 @@ router.get("/", async (req, res) => {
 
 router.put(
   "/edit_profile",
-  [auth, validateWith(edit_profile_schema)],
+  [
+    auth,
+    upload.single("profile_image"),
+    validateWith(edit_profile_schema),
+    //imageResize,
+  ],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
     const fields = ["name", "bio", "gender", "phone_number"];
     fields.forEach((field) => {
       if (req.body[field]) user[field] = req.body[field];
     });
+    if (req.file) {
+      if (user.profile_image)
+        fs.unlink(`uploads/${user.profile_image}`, (err) => console.log(err));
+      user.profile_image = req.file.filename;
+    }
     await user.save();
     res.status(200).send("user details was updated succfully");
   }
