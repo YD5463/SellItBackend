@@ -141,7 +141,7 @@ router.put(
       user.profile_image = req.file.filename;
     }
     await user.save();
-    res.status(200).send(generate_token(user));
+    res.status(200).send({ token: generate_token(user) });
   }
 );
 

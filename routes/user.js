@@ -33,6 +33,9 @@ router.get("/:id", auth, async (req, res) => {
     name: user.name,
     email: user.email,
     listings: listings.length,
+    profile_image: user.profile_image
+      ? mapper.mapImageToUrl(user.profile_image)
+      : null,
   });
 });
 

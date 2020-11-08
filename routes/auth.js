@@ -60,7 +60,7 @@ router.post(
       if (!succuss) return;
       return res.status(400).send({ error: "Invalid email or password." }); //change to end
     }
-    if (userLimiter && userLimiter.consumedPoints > 0)
+    if (req.userLimiter && req.userLimiter.consumedPoints > 0)
       await limiterConsecutiveFailsByUsername.delete(email);
     user.last_login = Date.now();
     await user.save();

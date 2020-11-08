@@ -26,6 +26,7 @@ const byUsername = async (req, res, next) => {
     res.set("Retry-After", String(retrySecs));
     return res.status(429).send("Too Many Requests");
   }
+  req.userLimiter = userLimiter;
   next();
 };
 
