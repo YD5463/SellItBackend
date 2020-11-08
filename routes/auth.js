@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
-const jwt = require("jsonwebtoken");
 const validateWith = require("../middleware/validation");
 const { User } = require("../models/users");
 const auth = require("../middleware/auth");
@@ -9,23 +8,13 @@ const moment = require("moment");
 const bcrypt = require("bcrypt");
 const { sendValidationCodeToEmail } = require("../utilities/mailer");
 const date_format = "DD/MM/YYYY";
+const { generate_token } = require("../utilities/helper");
 
 const schema = {
   email: Joi.string().email().required(),
   password: Joi.string().required().min(5),
 };
-const generate_token = (user) => {
-  const token = jwt.sign(
-    {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      profile_image: user.profile_image,
-    },
-    "jwtPrivateKey"
-  );
-  return token;
-};
+
 router.get("/send_velidation_code", auth, (req, res) => {
   const user = User.findById(req.user.userId);
   sendValidationCodeToEmail(user.email, req.user);

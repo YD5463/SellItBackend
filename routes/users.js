@@ -23,6 +23,7 @@ const {
 const config = require("config");
 const imageResize = require("../middleware/imageResize");
 const { mapImageToUrl } = require("../utilities/mapper");
+const { generate_token } = require("../utilities/helper");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -137,7 +138,7 @@ router.put(
       user.profile_image = req.file.filename;
     }
     await user.save();
-    res.status(200).send("user details was updated succfully");
+    res.status(200).send(generate_token(user));
   }
 );
 

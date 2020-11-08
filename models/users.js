@@ -57,7 +57,7 @@ const userSchema = new mongoose.Schema({
   },
   subscribeId: {
     type: mongoose.Types.ObjectId,
-    required: true,
+    required: false,
   },
   subscribe: {
     //delete this after integrate the subscribe table
