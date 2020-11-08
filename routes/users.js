@@ -24,6 +24,7 @@ const config = require("config");
 const imageResize = require("../middleware/imageResize");
 const { mapImageToUrl } = require("../utilities/mapper");
 const { generate_token } = require("../utilities/helper");
+const reqLimits = require("../middleware/reqLimits");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -35,6 +36,7 @@ const upload = multer({ storage, limits: { fieldSize: 25 * 1024 * 1024 } });
 router.post(
   "/",
   [
+    reqLimits.byIp,
     upload.single("profile_image"),
     validateWith(schema),
     imageResize.resize_profile_image,
@@ -64,7 +66,7 @@ router.post(
 
 router.put(
   "/forgot_password",
-  validateWith(forgot_password_schema),
+  [validateWith(forgot_password_schema), reqLimits.byIp],
   async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user)
@@ -87,7 +89,7 @@ router.put(
 );
 router.put(
   "/change_password",
-  [auth, validateWith(change_pass_schema)],
+  [auth, validateWith(change_pass_schema), reqLimits.byIp],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
     const curr_pass_match = await bcrypt.compare(
@@ -119,6 +121,7 @@ router.put(
   "/edit_profile",
   [
     auth,
+    reqLimits.byIp,
     upload.single("profile_image"),
     validateWith(edit_profile_schema),
     imageResize.resize_profile_image,
@@ -144,7 +147,7 @@ router.put(
 
 router.put(
   "/change_subscription_type",
-  [auth, validateWith(change_subscription_schema)],
+  [auth, validateWith(change_subscription_schema), reqLimits.byIp],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
     user.subscribe = req.body.subscribe;

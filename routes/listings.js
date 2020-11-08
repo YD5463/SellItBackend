@@ -10,6 +10,7 @@ const config = require("config");
 const { Categories } = require("../models/categories");
 const { schema, Listings } = require("../models/listings");
 const { sendNewListingEmail } = require("../utilities/mailer");
+const reqLimits = require("../middleware/reqLimits");
 
 const upload = multer({
   dest: "uploads/",
@@ -39,7 +40,7 @@ router.post(
     // if the request is invalid, we'll end up with one or more image files
     // stored in the uploads folder. We'll need to clean up this folder
     // using a separate process.
-    auth,
+    [auth, reqLimits.byIp],
     upload.array("images", config.get("maxImageCount")),
     validateWith(schema),
     validateCategoryId,

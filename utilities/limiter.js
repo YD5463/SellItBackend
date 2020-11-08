@@ -34,6 +34,7 @@ const SlowBruteByIP = new RateLimiterMemory({
   duration: 60 * 60 * 24, //one day
   blockDuration: 60 * 60 * 24, // Block for 1 day, if 100 wrong attempts per day
 });
+
 exports.SlowBruteByIP = SlowBruteByIP;
 exports.maxByIp = maxByIp;
 exports.limiterConsecutiveFailsByUsername = limiterConsecutiveFailsByUsername;

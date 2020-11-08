@@ -4,7 +4,6 @@ const auth = require("../middleware/auth");
 const { User } = require("../models/users");
 const { Listings } = require("../models/listings");
 const mongoose = require("mongoose");
-const path = require("path");
 const mapper = require("../utilities/mapper");
 
 router.get("/", auth, async (req, res) => {
