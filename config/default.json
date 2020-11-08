@@ -1,5 +1,6 @@
 {
   "delay": 0,
   "maxImageCount": 3,
-  "salt_rounds":10
+  "salt_rounds":10,
+  "db":"mongodb://localhost:27017/SellIt"
 }

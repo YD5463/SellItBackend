@@ -12,9 +12,10 @@ const helmet = require("helmet");
 const compression = require("compression");
 const config = require("config");
 const mongoose = require("mongoose");
+const https = require("https");
 const app = express();
-
-const db = "mongodb://localhost:27017/SellIt";
+// const limit = require("./startup/limiter");
+const db = config.get("db");
 
 mongoose
   .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -40,3 +41,6 @@ const port = process.env.PORT || config.get("port");
 app.listen(port, function () {
   console.log(`Server started on port ${port}...`);
 });
+// limit.init();
+// const server = http.createServer(app);
+// server.listen(port, () => console.log(`Server started on port ${port}...`));

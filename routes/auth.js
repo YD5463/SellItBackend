@@ -9,13 +9,19 @@ const bcrypt = require("bcrypt");
 const { sendValidationCodeToEmail } = require("../utilities/mailer");
 const date_format = "DD/MM/YYYY";
 const { generate_token } = require("../utilities/helper");
+const {
+  maxConsecutiveFailsByUsername,
+  limiterConsecutiveFailsByUsername,
+  consume,
+} = require("../utilities/limiter");
+const reqLimits = require("../middleware/reqLimits");
 
 const schema = {
   email: Joi.string().email().required(),
   password: Joi.string().required().min(5),
 };
 
-router.get("/send_velidation_code", auth, (req, res) => {
+router.get("/send_velidation_code", [auth, reqLimits.byIp], (req, res) => {
   const user = User.findById(req.user.userId);
   sendValidationCodeToEmail(user.email, req.user);
   res.status(200).send("code sent");
@@ -35,21 +41,35 @@ router.post("/validate_email", validateWith(code_schema), async (req, res) => {
   }
   res.status(400).send("code is expired or worng!");
 });
-router.post("/", validateWith(schema), async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user)
-    return res.status(400).send({ error: "Invalid email or password." });
+router.post(
+  "/",
+  [validateWith(schema), reqLimits.byIp, reqLimits.byUsername],
+  async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).send({ error: "Invalid email or password." });
 
-  const password_match = await bcrypt.compare(password, user.password);
-  if (!password_match)
-    return res.status(400).send({ error: "Invalid email or password." });
-  user.last_login = Date.now();
-  await user.save();
-  if (user.is_email_verified) return res.status(200).send(generate_token(user));
-  sendValidationCodeToEmail(email, user);
-  res.send("user created, please validate your email to get the token");
-});
+    const password_match = await bcrypt.compare(password, user.password);
+    if (!password_match) {
+      const succuss = await consume(
+        res,
+        limiterConsecutiveFailsByUsername,
+        email
+      );
+      if (!succuss) return;
+      return res.status(400).send({ error: "Invalid email or password." }); //change to end
+    }
+    if (userLimiter && userLimiter.consumedPoints > 0)
+      await limiterConsecutiveFailsByUsername.delete(email);
+    user.last_login = Date.now();
+    await user.save();
+    if (user.is_email_verified)
+      return res.status(200).send(generate_token(user));
+    sendValidationCodeToEmail(email, user);
+    res.send("user created, please validate your email to get the token");
+  }
+);
 
 router.put("/userLeft", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
