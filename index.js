@@ -13,6 +13,7 @@ const compression = require("compression");
 const config = require("config");
 const mongoose = require("mongoose");
 const https = require("https");
+const fs = require("fs");
 const app = express();
 // const limit = require("./startup/limiter");
 const db = config.get("db");
@@ -26,6 +27,17 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(helmet());
 app.use(compression());
+// app.use(
+//   require("express-session")({
+//     secret: "secertKey",
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: {
+//       secure: true,
+//       maxAge: 60 * 60 * 1000 * 24 * 365,
+//     },
+//   })
+// );
 
 app.use("/api/categories", categories);
 app.use("/api/listing", listing);
@@ -37,10 +49,11 @@ app.use("/api/my", my);
 app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
 
+const options = {
+  key: fs.readFileSync("ssl/key.pem"),
+  cert: fs.readFileSync("ssl/cert.pem"),
+};
 const port = process.env.PORT || config.get("port");
-app.listen(port, function () {
-  console.log(`Server started on port ${port}...`);
-});
-// limit.init();
-// const server = http.createServer(app);
-// server.listen(port, () => console.log(`Server started on port ${port}...`));
+https
+  .createServer(options, app)
+  .listen(port, () => console.log(`Server started on port ${port}...`));

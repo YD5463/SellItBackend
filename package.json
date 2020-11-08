@@ -19,6 +19,7 @@
     "config": "^3.3.1",
     "expo-server-sdk": "^3.5.0",
     "express": "^4.17.1",
+    "express-session": "^1.17.1",
     "form-data": "^3.0.0",
     "generate-password": "^1.5.1",
     "helmet": "^3.22.0",
