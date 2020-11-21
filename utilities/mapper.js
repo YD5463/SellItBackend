@@ -1,6 +1,5 @@
-const config = require("config");
-
-const baseUrl = config.get("assetsBaseUrl");
+const getBaseUrl = require("./getBaseUrl");
+const baseUrl = getBaseUrl.url;
 const mapImageToUrl = (image) => ({
   url: `${baseUrl}${image}_full.jpg`,
   thumbnailUrl: `${baseUrl}${image}_thumb.jpg`,
