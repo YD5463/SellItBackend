@@ -10,22 +10,30 @@ const { Listings } = require("../models/listings");
 const { schema, Message } = require("../models/messages");
 
 router.get("/", auth, async (req, res) => {
-  const messages = Message.find({ toUserId: req.user.userId });
+  const messages = Message.find({
+    $or: [
+      ({
+        toUserId: req.user.userId,
+      },
+      { fromUser: req.user.userId }),
+    ],
+  });
 
   const mapUser = async (userId) => {
     const user = await User.findById(userId);
-    return { id: user.id, name: user.name };
+    if (user == null) return { name: "removed user" };
+    return { name: user.name };
   };
 
-  const resources = messages.map(async (message) => ({
-    id: message.id,
+  const resources = await messages.map(async (message) => ({
+    // id: message._id,
     listingId: message.listingId,
     dateTime: message.dateTime,
     content: message.content,
     fromUser: await mapUser(message.fromUserId),
     toUser: await mapUser(message.toUserId),
   }));
-
+  console.log(resources);
   res.send(resources);
 });
 
