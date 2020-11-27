@@ -179,27 +179,47 @@ const messages = [
   },
 ];
 
+const subscriptions = [
+  {
+    name: "Markenting products",
+    description:
+      "A new product that uploaded last time the much to you - based on AI,\
+    Also a new sales notifications",
+    platform: "email",
+    icon: "cart",
+  },
+  {
+    name: "Transcation confimations",
+    description: "A message if transaction like buy or upload product succedd",
+    platform: "email",
+    icon: "arrow-swap",
+  },
+];
 const mongoose = require("mongoose");
 const { Categories } = require("./models/categories");
 const { Listings } = require("./models/listings");
 const { Message } = require("./models/messages");
 const { User } = require("./models/users");
-
+const { Subscription } = require("./models/subscriptions");
+const c = require("config");
 const seed = async () => {
-  await Categories.insertMany(categories);
-  await User.insertMany(users);
-  await Message.insertMany(messages);
+  // await Categories.insertMany(categories);
+  // await User.insertMany(users);
+  // await Message.insertMany(messages);
+  await Subscription.insertMany(subscriptions);
 };
 
 // seed();
 const main = async () => {
-  mongoose.connect("mongodb://localhost:27017/SellIt", {
+  await mongoose.connect("mongodb://localhost:27017/SellIt", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
   console.log("connected to db...");
-  await Listings.insertMany(listings);
+  // await Listings.insertMany(listings);
   //   await Message.insertMany(messages);
+  await Subscription.insertMany(subscriptions);
+  await mongoose.disconnect();
   console.log("done");
 };
 

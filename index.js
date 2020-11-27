@@ -5,7 +5,9 @@ const listing = require("./routes/listing");
 const users = require("./routes/users");
 const user = require("./routes/user");
 const auth = require("./routes/auth");
+const subscriptions = require("./routes/subscriptions");
 const my = require("./routes/my");
+const transactions = require("./routes/transactions");
 const messages = require("./routes/messages");
 const expoPushTokens = require("./routes/expoPushTokens");
 const helmet = require("helmet");
@@ -48,6 +50,8 @@ app.use("/api/auth", auth);
 app.use("/api/my", my);
 app.use("/api/expoPushTokens", expoPushTokens);
 app.use("/api/messages", messages);
+app.use("/api/subscriptions", subscriptions);
+app.use("/api/transactions", transactions);
 
 const options = {
   key: fs.readFileSync("ssl/key.pem"),
