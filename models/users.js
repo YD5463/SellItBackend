@@ -66,6 +66,11 @@ const userSchema = new mongoose.Schema({
     enum: subscribe_options,
     default: "marketing",
   },
+  public_fields:{
+    type:[],
+    required:true,
+    default:["phone_number","profile_image","email"]
+  }
 });
 
 const User = mongoose.model("Users", userSchema);
