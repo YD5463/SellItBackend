@@ -5,6 +5,12 @@ const { User } = require("../models/users");
 const { Listings } = require("../models/listings");
 const mongoose = require("mongoose");
 const mapper = require("../utilities/mapper");
+const validateWith = require("../middleware/validation");
+const { addressSchema, shippingAddress } = require("../models/shippingAddress");
+const { paymentSchema, paymentMethod } = require("../models/paymentMethod");
+const { User } = require("../models/users");
+
+const cryptojs = require("crypto");
 
 router.get("/", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
@@ -39,5 +45,49 @@ router.get("/:id", auth, async (req, res) => {
     phone_number: user.phone_number,
   });
 });
+
+router.get("/adresss", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  res.status(200).send(user.address);
+});
+router.get("/payemtMethods", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  res.status(200).send(user.paymentMethods);
+});
+
+router.post(
+  "/addAdresss",
+  [auth, validateWith(addressSchema)],
+  async (req, res) => {
+    const address = await shippingAddress.findOne({
+      card_number: req.body.street,
+    });
+    if (address) {
+      return res.status(400).send("Already exists.");
+    }
+    const new_address = await shippingAddress.create(req.body);
+    const user = await User.findById(req.user.userId);
+    user.address.push(new_address);
+    await user.save();
+    res.status(201).send("Shipping Address added added.");
+  }
+);
+router.post(
+  "/addPayemtMethods",
+  [auth, validateWith(paymentSchema)],
+  async (req, res) => {
+    const payment_method = await paymentMethod.findOne({
+      card_number: req.body.card_number,
+    });
+    if (payment_method) {
+      return res.status(400).send("Already exists.");
+    }
+    const new_payment = await paymentMethod.create(req.body);
+    const user = await User.findById(req.user.userId);
+    user.paymentMethods.push(new_payment);
+    await user.save();
+    res.status(201).send("Payment method added.");
+  }
+);
 
 module.exports = router;

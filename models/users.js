@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
+// const { shippingAddressSchema } = require("./shippingAddress");
+// const { paymentMethodSchema } = require("./paymentMethod");
 
 const subscribe_options = ["marketing", "updates", "non"];
 const gender_options = ["male", "female", "decline"];
@@ -55,6 +57,20 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  address: {
+    type: [mongoose.Types.ObjectId],
+    validate: {
+      validator: (val) => val.length < 10,
+    },
+    default: null,
+  },
+  paymentMethods: {
+    type: [mongoose.Types.ObjectId],
+    validate: {
+      validator: (val) => val.length < 10,
+    },
+    default: null,
+  },
   subscribeId: {
     type: mongoose.Types.ObjectId,
     required: false,
@@ -66,11 +82,11 @@ const userSchema = new mongoose.Schema({
     enum: subscribe_options,
     default: "marketing",
   },
-  public_fields:{
-    type:[],
-    required:true,
-    default:["phone_number","profile_image","email"]
-  }
+  public_fields: {
+    type: [],
+    required: true,
+    default: ["phone_number", "profile_image", "email"],
+  },
 });
 
 const User = mongoose.model("Users", userSchema);
