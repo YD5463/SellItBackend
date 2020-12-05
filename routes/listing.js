@@ -3,7 +3,7 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 const mapper = require("../utilities/mapper");
-const { Listings } = require("../models/listings");
+const { Listings } = require("../models/products/listings");
 
 router.get("/:id", auth, async (req, res) => {
   const listing = await Listings.findById(req.params.id);

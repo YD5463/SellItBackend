@@ -501,8 +501,8 @@ const states = {
 };
 
 const mongoose = require("mongoose");
-const { Categories } = require("./models/categories");
-const { Listings } = require("./models/listings");
+const { Categories } = require("./models/products/categories");
+const { Listings } = require("./models/products/listings");
 const { Message } = require("./models/messages");
 const { User } = require("./models/users");
 const { Subscription } = require("./models/subscriptions");

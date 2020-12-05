@@ -7,8 +7,8 @@ const auth = require("../middleware/auth");
 const imageResize = require("../middleware/imageResize");
 const mapper = require("../utilities/mapper");
 const config = require("config");
-const { Categories } = require("../models/categories");
-const { schema, Listings } = require("../models/listings");
+const { Categories } = require("../models/products/categories");
+const { schema, Listings } = require("../models/products/listings");
 const { sendNewListingEmail } = require("../utilities/mailer");
 const reqLimits = require("../middleware/reqLimits");
 

@@ -6,7 +6,7 @@ const sendPushNotification = require("../utilities/pushNotifications");
 const auth = require("../middleware/auth");
 const validateWith = require("../middleware/validation");
 const { User } = require("../models/users");
-const { Listings } = require("../models/listings");
+const { Listings } = require("../models/products/listings");
 const { schema, Message } = require("../models/messages");
 
 router.get("/", auth, async (req, res) => {

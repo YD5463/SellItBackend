@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const { Transaction, buySchema } = require("../models/transactions");
 const auth = require("../middleware/auth");
 const validateWith = require("../middleware/validation");
-const { Listings } = require("../models/listings");
+const { Listings } = require("../models/products/listings");
 
 router.post("/buy", [validateWith(buySchema), auth], async (req, res) => {
   const listingId = req.body.listingId;

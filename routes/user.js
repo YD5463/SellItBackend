@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const { User } = require("../models/users");
-const { Listings } = require("../models/listings");
+const { Listings } = require("../models/products/listings");
 const mongoose = require("mongoose");
 const mapper = require("../utilities/mapper");
 
