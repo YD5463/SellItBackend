@@ -27,13 +27,16 @@ const paymentMethodSchema = new mongoose.Schema({
 
 const paymentMethod = mongoose.model("paymentMethod", paymentMethodSchema);
 
-const schema = {
+const Addschema = {
   card_number: Joi.string().required(),
   cvv: Joi.string().required(),
   expireMonth: Joi.number().required().min(1).max(12),
   expireYear: Joi.number().required(),
   type: Joi.string().optional(),
 };
-// exports.paymentMethodSchema = paymentSchema;
+const deleteSchema = {
+  paymentId: Joi.string().required(),
+};
+exports.deleteSchema = deleteSchema;
 exports.paymentMethod = paymentMethod;
-exports.paymentSchema = schema;
+exports.paymentSchema = Addschema;

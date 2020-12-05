@@ -7,7 +7,11 @@ const mongoose = require("mongoose");
 const mapper = require("../utilities/mapper");
 const validateWith = require("../middleware/validation");
 const { addressSchema, shippingAddress } = require("../models/shippingAddress");
-const { paymentSchema, paymentMethod } = require("../models/paymentMethod");
+const {
+  paymentSchema,
+  paymentMethod,
+  deleteSchema,
+} = require("../models/paymentMethod");
 const CryptoJS = require("crypto-js");
 
 router.get("/", auth, async (req, res) => {
@@ -22,25 +26,6 @@ router.get("/", auth, async (req, res) => {
     profile_image: user.profile_image
       ? mapper.mapImageToUrl(user.profile_image)
       : null,
-  });
-});
-router.get("/:id", auth, async (req, res) => {
-  const userId = req.params.id;
-  if (!mongoose.isValidObjectId(userId))
-    return res.status(400).send("invalid user id!");
-  const user = await User.findById(userId);
-  if (!user) return res.status(404).send("user not exists");
-
-  const listings = await Listings.find({ userId });
-  res.status(200).send({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    listings: listings.length,
-    profile_image: user.profile_image
-      ? mapper.mapImageToUrl(user.profile_image)
-      : null,
-    phone_number: user.phone_number,
   });
 });
 
@@ -70,16 +55,29 @@ router.post(
     res.status(201).send("Shipping Address added added.");
   }
 );
-const encrypt = (text) => {
-  var key = CryptoJS.enc.Hex.parse("253D3FB468A0E24677C28A624BE0F939");
-  var iv = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
 
-  var encrypted = CryptoJS.AES.encrypt(text, key, {
+const getKeyAndIv = () => {
+  const key = CryptoJS.enc.Hex.parse("253D3FB468A0E24677C28A624BE0F939");
+  const iv = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
+  return { key, iv };
+};
+
+const encrypt = (text) => {
+  const { key, iv } = getKeyAndIv();
+  const encrypted = CryptoJS.AES.encrypt(text, key, {
     iv: iv,
     padding: CryptoJS.pad.NoPadding,
   });
-
   return encrypted.toString();
+};
+
+const decrypt = (text) => {
+  const { key, iv } = getKeyAndIv();
+  const decrypted = CryptoJS.AES.decrypt(text, key, {
+    iv: iv,
+    padding: CryptoJS.pad.NoPadding,
+  });
+  return decrypted.toString();
 };
 
 router.post(
@@ -97,9 +95,8 @@ router.post(
     const encrypted = {};
     for (const [key, value] of Object.entries(req.body)) {
       if (!value) continue;
-      encrypted[key] = encrypt(req.body.card_number);
+      encrypted[key] = encrypt(value);
     }
-    console.log(encrypted);
     const new_payment = await paymentMethod.create(encrypted);
     const user = await User.findById(req.user.userId);
     user.paymentMethods.push(new_payment);
@@ -108,4 +105,58 @@ router.post(
   }
 );
 
+router.get("/paymentMethods", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  const payments_data = [];
+  const decrypPromises = user.paymentMethods.map(async (payemntId) => {
+    const payment = await paymentMethod.findById(payemntId);
+    // console.log(payment);
+    const decrypted = { payemntId };
+    ["card_number", "cvv", "expireMonth", "expireYear"].forEach((key) => {
+      decrypted[key] = decrypt(payment[key]);
+    });
+    payments_data.push(decrypted);
+  });
+  await Promise.all([...decrypPromises]);
+  res.status(200).send(payments_data);
+});
+
+router.put(
+  "/deletePaymentMethod",
+  [auth, validateWith(deleteSchema)],
+  async (req, res) => {
+    const user = await User.findById(req.user.userId);
+    const payment = await paymentMethod.findByIdAndRemove(req.body.paymentId);
+    if (!payment) return res.status(404).send("No such payment method");
+
+    const index = user.paymentMethods.indexOf(
+      mongoose.Types.ObjectId(payment._id)
+    );
+    if (index == -1) return res.status(404).send("not found");
+    console.log(index);
+    user.paymentMethods.splice(index, 1);
+    await user.save();
+    res.status(200).send("Deleted");
+  }
+);
+
+router.get("/:id", auth, async (req, res) => {
+  const userId = req.params.id;
+  if (!mongoose.isValidObjectId(userId))
+    return res.status(400).send("invalid user id!");
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).send("user not exists");
+
+  const listings = await Listings.find({ userId });
+  res.status(200).send({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    listings: listings.length,
+    profile_image: user.profile_image
+      ? mapper.mapImageToUrl(user.profile_image)
+      : null,
+    phone_number: user.phone_number,
+  });
+});
 module.exports = router;
