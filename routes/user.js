@@ -8,9 +8,7 @@ const mapper = require("../utilities/mapper");
 const validateWith = require("../middleware/validation");
 const { addressSchema, shippingAddress } = require("../models/shippingAddress");
 const { paymentSchema, paymentMethod } = require("../models/paymentMethod");
-const { User } = require("../models/users");
-
-const cryptojs = require("crypto");
+const CryptoJS = require("crypto-js");
 
 router.get("/", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
@@ -72,17 +70,37 @@ router.post(
     res.status(201).send("Shipping Address added added.");
   }
 );
+const encrypt = (text) => {
+  var key = CryptoJS.enc.Hex.parse("253D3FB468A0E24677C28A624BE0F939");
+  var iv = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
+
+  var encrypted = CryptoJS.AES.encrypt(text, key, {
+    iv: iv,
+    padding: CryptoJS.pad.NoPadding,
+  });
+
+  return encrypted.toString();
+};
+
 router.post(
   "/addPayemtMethods",
   [auth, validateWith(paymentSchema)],
   async (req, res) => {
+    const encrypted_card_number = encrypt(req.body.card_number);
+
     const payment_method = await paymentMethod.findOne({
-      card_number: req.body.card_number,
+      card_number: encrypted_card_number,
     });
     if (payment_method) {
       return res.status(400).send("Already exists.");
     }
-    const new_payment = await paymentMethod.create(req.body);
+    const encrypted = {};
+    for (const [key, value] of Object.entries(req.body)) {
+      if (!value) continue;
+      encrypted[key] = encrypt(req.body.card_number);
+    }
+    console.log(encrypted);
+    const new_payment = await paymentMethod.create(encrypted);
     const user = await User.findById(req.user.userId);
     user.paymentMethods.push(new_payment);
     await user.save();

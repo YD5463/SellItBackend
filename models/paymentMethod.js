@@ -5,32 +5,23 @@ const paymentMethodSchema = new mongoose.Schema({
   card_number: {
     required: true,
     type: String,
-    validate: {
-      validator: (value) => /\d{16}/.test(value),
-    },
   },
   expireMonth: {
     required: true,
-    type: Number,
-    min: 1,
-    max: 12,
+    type: String,
   },
   expireYear: {
     required: true,
-    type: Number,
-    // min: Date.now().getFullYear(),
-    // max: Date.now().getFullYear() + 30,
+    type: String,
   },
   cvv: {
     required: true,
     type: String,
-    validate: {
-      validator: (value) => /\d{3}/.test(value),
-    },
   },
   type: {
-    required: true,
+    required: false,
     type: String,
+    default: "Credit Card",
   },
 });
 
@@ -41,7 +32,7 @@ const schema = {
   cvv: Joi.string().required(),
   expireMonth: Joi.number().required().min(1).max(12),
   expireYear: Joi.number().required(),
-  type: Joi.string().required(),
+  type: Joi.string().optional(),
 };
 // exports.paymentMethodSchema = paymentSchema;
 exports.paymentMethod = paymentMethod;
