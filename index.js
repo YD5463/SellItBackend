@@ -11,6 +11,7 @@ const transactions = require("./routes/transactions");
 const messages = require("./routes/messages");
 const expoPushTokens = require("./routes/expoPushTokens");
 const address = require("./routes/address");
+const checkout = require("./routes/checkout");
 const helmet = require("helmet");
 const compression = require("compression");
 const config = require("config");
@@ -22,7 +23,11 @@ const app = express();
 const db = config.get("db");
 
 mongoose
-  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(db, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    // useFindAndModify: true,
+  })
   .then(() => console.info(`Connected to ${db}...`))
   .catch((reason) => console.log("field to connect mongo db", reason));
 
@@ -54,6 +59,7 @@ app.use("/api/messages", messages);
 app.use("/api/subscriptions", subscriptions);
 app.use("/api/transactions", transactions);
 app.use("/api/address/", address);
+app.use("/api/checkout/", checkout);
 
 const options = {
   key: fs.readFileSync("ssl/key.pem"),
