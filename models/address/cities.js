@@ -6,6 +6,10 @@ const cityShchema = new mongoose.Schema({
     type: String,
   },
   state: {
+    required: false,
+    type: mongoose.Types.ObjectId,
+  },
+  country: {
     required: true,
     type: mongoose.Types.ObjectId,
   },

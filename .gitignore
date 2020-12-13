@@ -2,3 +2,5 @@ node_modules/
 uploads/
 ssl/
 public/
+*.zip
+json_seed_data/

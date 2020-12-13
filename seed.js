@@ -1,3 +1,4 @@
+const cities = require("cities.json");
 const listings = [
   {
     title: "Red jacket",
@@ -509,6 +510,7 @@ const { Subscription } = require("./models/subscriptions");
 const c = require("config");
 const { Country } = require("./models/address/countries");
 const { State } = require("./models/address/states");
+const { City } = require("./models/address/cities");
 const seed = async () => {
   // await Categories.insertMany(categories);
   // await User.insertMany(users);
@@ -529,9 +531,46 @@ const main = async () => {
   // const usa = await Country.findOne({ codeName: "US" });
   // for (let [codeName, name] of Object.entries(states)) {
   //   await State.create({ name, codeName, country: usa._id });
-  // }
+  //
+  const promises = [];
+  for (const cityid in cities) {
+    const city_data = cities[cityid];
+    const country = await Country.findOne({ codeName: city_data.country });
+    if (!country || City.exists({ name: city_data.name })) continue;
+    promises.push(
+      City.create({
+        name: city_data.name,
+        country: country._id,
+      })
+    );
+  }
+  await Promise.all([...promises]);
   await mongoose.disconnect();
   console.log("done");
 };
 
-// main();
+main();
+/*
+  const address = [
+  {
+    city: "Jerusalem",
+    state: "Israel",
+    postal_code: "9778807",
+    country: "Israel",
+    street: "Yoel Fridler",
+  },
+  {
+    city: "Jerusalem",
+    state: "Israel",
+    postal_code: "97788",
+    country: "Israel",
+    street: "Sherman ohoks",
+  },
+];
+const paymentMethods = [
+  {
+    card_number: "4545454545454",
+    icon_url: "http://192.168.68.101:9000/assets/mastercard.jpg",
+  },
+];
+ */
