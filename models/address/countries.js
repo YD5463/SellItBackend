@@ -6,7 +6,7 @@ const countrySchema = new mongoose.Schema({
     type: String,
   },
   codeName: {
-    required: true,
+    required: false,
     type: String,
   },
 });

@@ -4,24 +4,30 @@ const auth = require("../middleware/auth");
 const { User } = require("../models/users");
 const mongoose = require("mongoose");
 const validateWith = require("../middleware/validation");
-const { addressSchema, shippingAddress } = require("../models/shippingAddress");
+const {
+  addressSchema,
+  shippingAddress,
+  deleteAddressSchema,
+} = require("../models/shippingAddress");
 const {
   paymentSchema,
   paymentMethod,
   deleteSchema,
 } = require("../models/paymentMethod");
 const CryptoJS = require("crypto-js");
+const { Country } = require("../models/address/countries");
+const { City } = require("../models/address/cities");
 
 router.post(
   "/addAdresss",
   [auth, validateWith(addressSchema)],
   async (req, res) => {
     const address = await shippingAddress.findOne({
-      card_number: req.body.street,
+      street: req.body.street, //chnage this
     });
-    if (address) {
-      return res.status(400).send("Already exists.");
-    }
+    if (address) return res.status(400).send("Already exists.");
+    const country = await Country.findOne({ name: req.body.country });
+    if (!country) return res.status(404).send("No such country");
     const new_address = await shippingAddress.create(req.body);
     const user = await User.findById(req.user.userId);
     user.address.push(new_address);
@@ -29,29 +35,37 @@ router.post(
     res.status(201).send("Shipping Address added added.");
   }
 );
-
-const getKeyAndIv = () => {
-  const key = CryptoJS.enc.Hex.parse("253D3FB468A0E24677C28A624BE0F939");
-  const iv = CryptoJS.enc.Hex.parse("00000000000000000000000000000000");
-  return { key, iv };
+//update array after delete
+const updateUserAfterDelete = async (req, assetId, assetsName) => {
+  const user = await User.findById(req.user.userId);
+  const index = user.indexOf(mongoose.Types.ObjectId(assetId));
+  if (index == -1) return;
+  user[assetsName] = user[assetsName].splice(index, 1);
+  await user.save();
 };
 
-const encrypt = (text) => {
-  const { key, iv } = getKeyAndIv();
-  const encrypted = CryptoJS.AES.encrypt(text, key, {
-    iv: iv,
-    padding: CryptoJS.pad.NoPadding,
-  });
-  return encrypted.toString();
+router.put(
+  "/deleteAddress",
+  [auth, validateWith(deleteAddressSchema)],
+  async (req, res) => {
+    if (!mongoose.isValidObjectId(req.body.addressId))
+      return res.status(400).send("Invalid id");
+    const address = await shippingAddress.findByIdAndRemove(req.body.addressId);
+    if (!address) return res.status(404).send("No Such Address...");
+    await updateUserAfterDelete(req, address._id, "address");
+    res.status(200).send("Deleted");
+  }
+);
+const secretkey = "Pass555";
+const encrypt = (messageToencrypt) => {
+  var encryptedMessage = CryptoJS.AES.encrypt(messageToencrypt, secretkey);
+  return encryptedMessage.toString();
 };
+const decrypt = (encryptedMessage) => {
+  var decryptedBytes = CryptoJS.AES.decrypt(encryptedMessage, secretkey);
+  var decryptedMessage = decryptedBytes.toString(CryptoJS.enc.Utf8);
 
-const decrypt = (text) => {
-  const { key, iv } = getKeyAndIv();
-  const decrypted = CryptoJS.AES.decrypt(text, key, {
-    iv: iv,
-    padding: CryptoJS.pad.NoPadding,
-  });
-  return decrypted.toString();
+  return decryptedMessage;
 };
 
 router.post(
@@ -84,12 +98,18 @@ router.get("/paymentMethods", auth, async (req, res) => {
   const payments_data = [];
   const decrypPromises = user.paymentMethods.map(async (payemntId) => {
     const payment = await paymentMethod.findById(payemntId);
-    // console.log(payment);
-    const decrypted = { payemntId };
-    ["card_number", "cvv", "expireMonth", "expireYear"].forEach((key) => {
-      decrypted[key] = decrypt(payment[key]);
-    });
-    payments_data.push(decrypted);
+    if (payment) {
+      const decrypted = {
+        payemntId,
+        icon: payment.icon,
+      };
+      ["card_number", "cvv", "expireMonth", "expireYear"].forEach((key) => {
+        decrypted[key] = decrypt(payment[key]);
+      });
+
+      console.log(decrypted);
+      payments_data.push(decrypted);
+    }
   });
   await Promise.all([...decrypPromises]);
   res.status(200).send(payments_data);
@@ -107,8 +127,7 @@ router.put(
       mongoose.Types.ObjectId(payment._id)
     );
     if (index == -1) return res.status(404).send("not found");
-    console.log(index);
-    user.paymentMethods.splice(index, 1);
+    user.paymentMethods = user.paymentMethods.splice(index, 1);
     await user.save();
     res.status(200).send("Deleted");
   }

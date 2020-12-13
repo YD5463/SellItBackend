@@ -5,6 +5,7 @@ const { User } = require("../models/users");
 const { Listings } = require("../models/products/listings");
 const mongoose = require("mongoose");
 const mapper = require("../utilities/mapper");
+const { shippingAddress } = require("../models/shippingAddress");
 
 router.get("/", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
@@ -23,7 +24,14 @@ router.get("/", auth, async (req, res) => {
 
 router.get("/adresss", auth, async (req, res) => {
   const user = await User.findById(req.user.userId);
-  res.status(200).send(user.address);
+  const address = [];
+  const getAddressPromises = user.address.map(async (addressId) => {
+    const curr_addres = await shippingAddress.findById(addressId);
+    if (curr_addres) address.push(curr_addres);
+  });
+  await Promise.all([...getAddressPromises]);
+  console.log(address);
+  res.status(200).send(address);
 });
 
 router.get("/:id", auth, async (req, res) => {

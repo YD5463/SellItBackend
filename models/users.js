@@ -60,14 +60,14 @@ const userSchema = new mongoose.Schema({
   address: {
     type: [mongoose.Types.ObjectId],
     validate: {
-      validator: (val) => val.length < 10,
+      validator: (val) => val.length < 10, //at most 10 address
     },
     default: null,
   },
   paymentMethods: {
     type: [mongoose.Types.ObjectId],
     validate: {
-      validator: (val) => val.length < 10,
+      validator: (val) => val.length < 10, //at most 10 payments
     },
     default: null,
   },
