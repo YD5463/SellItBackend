@@ -3,4 +3,5 @@ uploads/
 ssl/
 public/
 *.zip
-json_seed_data/
+seed_data/
+world-cities_json.json
