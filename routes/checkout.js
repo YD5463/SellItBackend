@@ -87,7 +87,7 @@ router.post(
     }
     const new_payment = await paymentMethod.create(encrypted);
     const user = await User.findById(req.user.userId);
-    user.paymentMethods.push(new_payment);
+    user.paymentMethods.push(new_payment._id);
     await user.save();
     res.status(201).send("Payment method added.");
   }
