@@ -15,6 +15,7 @@
   "author": "Yosef Danan",
   "license": "ISC",
   "dependencies": {
+    "apicache": "^1.5.3",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "cities.json": "^1.1.5",

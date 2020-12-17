@@ -18,6 +18,7 @@ const config = require("config");
 const mongoose = require("mongoose");
 const https = require("https");
 const fs = require("fs");
+const apicache = require("apicache");
 const app = express();
 // const limit = require("./startup/limiter");
 const db = config.get("db");
@@ -31,6 +32,8 @@ mongoose
   .then(() => console.info(`Connected to ${db}...`))
   .catch((reason) => console.log("field to connect mongo db", reason));
 
+const cache = apicache.middleware;
+// app.use(cache("5 minutes"));
 app.use(express.static("public"));
 app.use(express.json());
 app.use(helmet());
