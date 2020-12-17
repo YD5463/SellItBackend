@@ -22,17 +22,6 @@ router.get("/", auth, async (req, res) => {
   });
 });
 
-router.get("/adresss", auth, async (req, res) => {
-  const user = await User.findById(req.user.userId);
-  const address = [];
-  const getAddressPromises = user.address.map(async (addressId) => {
-    const curr_addres = await shippingAddress.findById(addressId);
-    if (curr_addres) address.push(curr_addres);
-  });
-  await Promise.all([...getAddressPromises]);
-  console.log(address);
-  res.status(200).send(address);
-});
 
 router.get("/:id", auth, async (req, res) => {
   const userId = req.params.id;

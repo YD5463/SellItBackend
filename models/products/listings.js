@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
-const filenameSchema = new mongoose.Schema({
-  filename: {
-    type: Map,
-    of: String,
-  },
-});
+// const filenameSchema = new mongoose.Schema({
+//   filename: {
+//     type: Map,
+//     of: String,
+//   },
+// });
 
 const locationDetailSchema = new mongoose.Schema({
   latitude: { type: Number, required: true },
@@ -54,5 +54,6 @@ const schema = {
   }).optional(),
 };
 
+exports.listingSchema = listingSchema;
 exports.Listings = Listings;
 exports.schema = schema;

@@ -22,6 +22,11 @@ const shippingAddressSchema = new mongoose.Schema({
     required: true,
     type: String,
   },
+  inUse: {
+    required: false,
+    type: Boolean,
+    default: false,
+  },
 });
 
 const shippingAddress = mongoose.model(

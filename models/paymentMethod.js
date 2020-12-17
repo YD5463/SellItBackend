@@ -28,15 +28,19 @@ const paymentMethodSchema = new mongoose.Schema({
     type: String,
     default: "mastercard",
   },
+  inUse: {
+    required: false,
+    type: Boolean,
+    default: false,
+  },
 });
 
 const paymentMethod = mongoose.model("paymentMethod", paymentMethodSchema);
 
-
 const Addschema = {
   card_number: Joi.string().required(),
-  owner_name:Joi.string().optional(),
-  id_number:Joi.string().optional(),
+  owner_name: Joi.string().optional(),
+  id_number: Joi.string().optional(),
   cvv: Joi.string().required(),
   expireMonth: Joi.number().required().min(1).max(12),
   expireYear: Joi.number().required(),

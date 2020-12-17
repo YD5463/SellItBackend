@@ -42,6 +42,18 @@ const sendNewPassword = async (password, email) => {
     html: `Your new password is: <b>${password}</b>`,
   });
 };
-exports.sendValidationCodeToEmail = sendValidationCodeToEmail;
-exports.sendNewListingEmail = sendNewListingEmail;
-exports.sendNewPassword = sendNewPassword;
+
+const sendNewTransactionAlert = async (userId, listings) => {
+  const user = await User.findById(userId);
+  await transporter.sendMail({
+    from: from_address,
+    to: user.email,
+    subject: "CheckOut Confirmation",
+    html: listings,
+  });
+};
+
+module.exports.sendNewTransactionAlert = sendNewTransactionAlert;
+module.exports.sendValidationCodeToEmail = sendValidationCodeToEmail;
+module.exports.sendNewListingEmail = sendNewListingEmail;
+module.exports.sendNewPassword = sendNewPassword;

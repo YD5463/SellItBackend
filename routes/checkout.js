@@ -52,10 +52,23 @@ router.put(
       return res.status(400).send("Invalid id");
     const address = await shippingAddress.findByIdAndRemove(req.body.addressId);
     if (!address) return res.status(404).send("No Such Address...");
+    if (address.inUse) return res.status(403).send("Address in use");
     await updateUserAfterDelete(req, address._id, "address");
     res.status(200).send("Deleted");
   }
 );
+router.get("/adresss", auth, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+  const address = [];
+  const getAddressPromises = user.address.map(async (addressId) => {
+    const curr_addres = await shippingAddress.findById(addressId);
+    if (curr_addres) address.push(curr_addres);
+  });
+  await Promise.all([...getAddressPromises]);
+  console.log(address);
+  res.status(200).send(address);
+});
+
 const secretkey = "Pass555";
 const encrypt = (messageToencrypt) => {
   var encryptedMessage = CryptoJS.AES.encrypt(messageToencrypt, secretkey);
@@ -122,7 +135,7 @@ router.put(
     const user = await User.findById(req.user.userId);
     const payment = await paymentMethod.findByIdAndRemove(req.body.paymentId);
     if (!payment) return res.status(404).send("No such payment method");
-
+    if (payment.inUse) return res.status(403).send("Payment in use");
     const index = user.paymentMethods.indexOf(
       mongoose.Types.ObjectId(payment._id)
     );
