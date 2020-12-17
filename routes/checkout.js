@@ -50,9 +50,10 @@ router.put(
   async (req, res) => {
     if (!mongoose.isValidObjectId(req.body.addressId))
       return res.status(400).send("Invalid id");
-    const address = await shippingAddress.findByIdAndRemove(req.body.addressId);
+    const address = await shippingAddress.findById(req.body.addressId);
     if (!address) return res.status(404).send("No Such Address...");
     if (address.inUse) return res.status(403).send("Address in use");
+    await address.remove();
     await updateUserAfterDelete(req, address._id, "address");
     res.status(200).send("Deleted");
   }
@@ -133,9 +134,10 @@ router.put(
   [auth, validateWith(deleteSchema)],
   async (req, res) => {
     const user = await User.findById(req.user.userId);
-    const payment = await paymentMethod.findByIdAndRemove(req.body.paymentId);
+    const payment = await paymentMethod.findById(req.body.paymentId);
     if (!payment) return res.status(404).send("No such payment method");
     if (payment.inUse) return res.status(403).send("Payment in use");
+    await payment.remove();
     const index = user.paymentMethods.indexOf(
       mongoose.Types.ObjectId(payment._id)
     );
