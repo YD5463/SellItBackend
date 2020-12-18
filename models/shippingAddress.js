@@ -37,7 +37,7 @@ const shippingAddress = mongoose.model(
 const schema = {
   city: Joi.required(),
   state: Joi.optional(),
-  postal_code: Joi.optional(),
+  postal_code: Joi.required(),
   country: Joi.required(),
   street: Joi.required(),
 };

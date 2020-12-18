@@ -17,17 +17,32 @@ const {
 const CryptoJS = require("crypto-js");
 const { Country } = require("../models/address/countries");
 const { City } = require("../models/address/cities");
+const { State } = require("../models/address/states");
 
 router.post(
   "/addAdresss",
   [auth, validateWith(addressSchema)],
   async (req, res) => {
     const address = await shippingAddress.findOne({
-      street: req.body.street, //chnage this
+      street: req.body.street,
+      postal_code: req.body.postal_code,
     });
     if (address) return res.status(400).send("Already exists.");
     const country = await Country.findOne({ name: req.body.country });
     if (!country) return res.status(404).send("No such country");
+    const country_state = await State.findOne({ country: country._id });
+    let state = null;
+    if (country_state) {
+      if (!req.body.state) return res.status(400).send("state is missing");
+      state = await State.findOne({ name: req.body.state });
+      if (!state) return res.status(404).send("No such state");
+    }
+    const city = await City.findOne({ name: req.body.city });
+    if (!city) return res.status(404).send("No such City");
+    if (city.country !== country._id)
+      return res.status(409).send("No such city in this country");
+    if (state && city.state && state._id !== city.state)
+      return res.status(409).send("No such city in this state");
     const new_address = await shippingAddress.create(req.body);
     const user = await User.findById(req.user.userId);
     user.address.push(new_address);
@@ -52,7 +67,7 @@ router.put(
       return res.status(400).send("Invalid id");
     const address = await shippingAddress.findById(req.body.addressId);
     if (!address) return res.status(404).send("No Such Address...");
-    if (address.inUse) return res.status(403).send("Address in use");
+    if (address.inUse) return res.status(423).send("Address in use");
     await address.remove();
     await updateUserAfterDelete(req, address._id, "address");
     res.status(200).send("Deleted");
@@ -136,7 +151,7 @@ router.put(
     const user = await User.findById(req.user.userId);
     const payment = await paymentMethod.findById(req.body.paymentId);
     if (!payment) return res.status(404).send("No such payment method");
-    if (payment.inUse) return res.status(403).send("Payment in use");
+    if (payment.inUse) return res.status(423).send("Payment in use");
     await payment.remove();
     const index = user.paymentMethods.indexOf(
       mongoose.Types.ObjectId(payment._id)
