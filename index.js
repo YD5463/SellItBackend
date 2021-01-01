@@ -12,6 +12,7 @@ const messages = require("./routes/messages");
 const expoPushTokens = require("./routes/expoPushTokens");
 const address = require("./routes/address");
 const checkout = require("./routes/checkout");
+const chats = require("./routes/chats");
 const helmet = require("helmet");
 const compression = require("compression");
 const config = require("config");
@@ -22,7 +23,6 @@ const apicache = require("apicache");
 const app = express();
 // const limit = require("./startup/limiter");
 const db = config.get("db");
-
 mongoose
   .connect(db, {
     useNewUrlParser: true,
@@ -63,6 +63,7 @@ app.use("/api/subscriptions", subscriptions);
 app.use("/api/transactions", transactions);
 app.use("/api/address/", address);
 app.use("/api/checkout/", checkout);
+app.use("/api/chats/", chats);
 
 const options = {
   key: fs.readFileSync("ssl/key.pem"),
@@ -72,6 +73,7 @@ const port = process.env.PORT || config.get("port");
 const server = app.listen(port, () =>
   console.log(`Server started on port ${port}...`)
 );
+
 module.exports = server;
 // https
 //   .createServer(options, app)

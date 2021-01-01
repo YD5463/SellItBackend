@@ -40,6 +40,7 @@
     "rate-limiter-flexible": "^2.1.13",
     "redis": "^3.0.2",
     "sharp": "^0.25.2",
+    "socket.io": "^3.0.4",
     "supertest": "^6.0.1"
   },
   "devDependencies": {

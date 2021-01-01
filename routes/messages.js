@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { Expo } = require("expo-server-sdk");
-
 const sendPushNotification = require("../utilities/pushNotifications");
 const auth = require("../middleware/auth");
 const validateWith = require("../middleware/validation");
@@ -60,5 +59,6 @@ router.post("/", [auth, validateWith(schema)], async (req, res) => {
 
   res.status(201).send();
 });
+
 
 module.exports = router;
