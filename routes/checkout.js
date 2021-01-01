@@ -20,9 +20,12 @@ const { City } = require("../models/address/cities");
 const { State } = require("../models/address/states");
 
 router.post(
-  "/addAdresss",
+  "/addAddress",
   [auth, validateWith(addressSchema)],
   async (req, res) => {
+    const user = await User.findById(req.user.userId);
+    if (user.address.lenght === 10)
+      return res.status(403).send("To many address");
     const address = await shippingAddress.findOne({
       street: req.body.street,
       postal_code: req.body.postal_code,
@@ -44,7 +47,6 @@ router.post(
     if (state && city.state && state._id !== city.state)
       return res.status(409).send("No such city in this state");
     const new_address = await shippingAddress.create(req.body);
-    const user = await User.findById(req.user.userId);
     user.address.push(new_address);
     await user.save();
     res.status(201).send("Shipping Address added added.");
