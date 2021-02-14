@@ -11,19 +11,7 @@ const { City } = require("./models/address/cities");
 const cities = require("./seed_data/world-cities_json.json");
 const lookup = require("country-code-lookup");
 
-const main = async () => {
-  await mongoose.connect("mongodb://localhost:27017/SellIt", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  console.log("connected to db...");
-  // await Listings.insertMany(listings);
-  //   await Message.insertMany(messages);
-  // await Subscription.insertMany(subscriptions);
-  // const usa = await Country.findOne({ codeName: "US" });
-  // for (let [codeName, name] of Object.entries(states)) {
-  //   await State.create({ name, codeName, country: usa._id });
-  //
+const addressSeed = async () => {
   const promises = [];
   for (const cityid in cities) {
     const city_data = cities[cityid];
@@ -50,6 +38,43 @@ const main = async () => {
     });
   }
   await Promise.all([...promises]);
+};
+const messagesSeed = async () => {
+  const myId = "5f9b00d67b548026684d9848";
+  const peerId = "5fac01b832b5c624f40b202a";
+  await Message.create({
+    fromUserId: myId,
+    toUserId: peerId,
+    content: "hey there",
+    dateTime: Date.now(),
+  });
+  await Message.create({
+    fromUserId: peerId,
+    toUserId: myId,
+    content: "im good how are you",
+    dateTime: Date.now(),
+  });
+  await Message.create({
+    fromUserId: myId,
+    toUserId: peerId,
+    content: "great",
+    dateTime: Date.now(),
+  });
+};
+const main = async () => {
+  await mongoose.connect("mongodb://localhost:27017/SellIt", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  console.log("connected to db...");
+  // await Listings.insertMany(listings);
+  //   await Message.insertMany(messages);
+  // await Subscription.insertMany(subscriptions);
+  // const usa = await Country.findOne({ codeName: "US" });
+  // for (let [codeName, name] of Object.entries(states)) {
+  //   await State.create({ name, codeName, country: usa._id });
+  //
+  await messagesSeed();
   await mongoose.disconnect();
   console.log("done");
 };

@@ -1,10 +1,3 @@
-/*
-fromUserId: req.user.userId,
-    toUserId: listing.userId,
-    listingId,
-    content: message,
-*/
-
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
@@ -17,10 +10,6 @@ const messageSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     required: true,
   },
-  listingId: {
-    type: mongoose.Types.ObjectId,
-    required: true,
-  },
   content: {
     required: true,
     type: String,
@@ -29,12 +18,16 @@ const messageSchema = new mongoose.Schema({
     required: true,
     type: Date,
   },
+  contentType: {
+    required: true,
+    type: String,
+    default: "text",
+  },
 });
 
 const Message = mongoose.model("Messages", messageSchema);
 
 const schema = {
-  listingId: Joi.number().required(),
   message: Joi.string().required(),
 };
 

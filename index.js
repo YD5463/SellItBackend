@@ -70,11 +70,36 @@ const options = {
   cert: fs.readFileSync("ssl/cert.pem"),
 };
 const port = process.env.PORT || config.get("port");
-const server = app.listen(port, () =>
-  console.log(`Server started on port ${port}...`)
-);
 
-module.exports = server;
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
+
+server.listen(port, () => console.log("server running on port:" + port));
+io.use(function (socket, next) {
+  if (socket.handshake.query && socket.handshake.query.token) {
+    jwt.verify(
+      socket.handshake.query.token,
+      config.get("jwtKey"),
+      function (err, decoded) {
+        if (err) return next(new Error("Authentication error"));
+        socket.user = decoded;
+        socket.peerId = socket.handshake.query.peerId; //auth this
+        next();
+      }
+    );
+  } else {
+    next(new Error("Authentication error"));
+  }
+}).on("connection", (socket) => {
+  console.log("a user connected...");
+  socket.on("chat message", (msg) => {
+    socket.join(socket.user.userId);
+    console.log(msg, socket.peerId);
+    io.to(socket.peerId).emit("chat message", msg);
+  });
+});
+module.exports.io = io;
+module.exports.server = server;
 // https
 //   .createServer(options, app)
 //   .listen(port, () => console.log(`Server started on port ${port}...`));
