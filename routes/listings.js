@@ -40,7 +40,8 @@ router.post(
     // if the request is invalid, we'll end up with one or more image files
     // stored in the uploads folder. We'll need to clean up this folder
     // using a separate process.
-    [auth, reqLimits.byIp],
+    auth,
+    reqLimits.byIp,
     upload.array("images", config.get("maxImageCount")),
     validateWith(schema),
     validateCategoryId,
@@ -53,11 +54,11 @@ router.post(
       price: parseFloat(req.body.price),
       categoryId: req.body.categoryId,
       description: req.body.description,
+      images: req.images,
     };
-    listing.images = req.images.map((fileName) => ({ fileName: fileName }));
-    if (req.body.location) listing.location = req.body.location;
-    if (req.user) listing.userId = req.user.userId;
 
+    if (req.body.location) listing.location = JSON.parse(req.body.location);
+    if (req.user) listing.userId = req.user.userId;
     listing = await Listings.create(listing);
     sendNewListingEmail(listing, req.user.userId);
     res.status(201).send(listing);

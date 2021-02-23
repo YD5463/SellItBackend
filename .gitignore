@@ -5,3 +5,4 @@ public/
 *.zip
 seed_data/
 world-cities_json.json
+test.js

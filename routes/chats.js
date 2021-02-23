@@ -17,11 +17,7 @@ router.get("/", auth, async (req, res) => {
         ? message.toUserId
         : message.fromUserId;
     if (!(id in chats)) chats[id] = [];
-    chats[id].push({
-      content: message.content,
-      contentType: message.contentType,
-      dateTime: message.dateTime,
-    });
+    chats[id].push(message);
   }
   const contacts = await User.find({ _id: { $in: Object.keys(chats) } });
   const fullChatsData = [];
