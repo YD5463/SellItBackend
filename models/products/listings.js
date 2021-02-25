@@ -53,7 +53,10 @@ const schema = {
     longitude: Joi.number().required(),
   }).optional(),
 };
-
+const deleteSchema = {
+  listingId: Joi.string().required().min(1),
+};
 exports.listingSchema = listingSchema;
 exports.Listings = Listings;
+exports.deleteSchema = deleteSchema;
 exports.schema = schema;

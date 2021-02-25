@@ -8,7 +8,11 @@ const imageResize = require("../middleware/imageResize");
 const mapper = require("../utilities/mapper");
 const config = require("config");
 const { Categories } = require("../models/products/categories");
-const { schema, Listings } = require("../models/products/listings");
+const {
+  schema,
+  Listings,
+  deleteSchema,
+} = require("../models/products/listings");
 const { sendNewListingEmail } = require("../utilities/mailer");
 const reqLimits = require("../middleware/reqLimits");
 
@@ -65,4 +69,10 @@ router.post(
   }
 );
 
+router.put("/delete", [auth, validateWith(deleteSchema)], async (req, res) => {
+  const listing = await Listings.findById(req.body.listingId);
+  if (!listing) return res.status(400).send("No such Listing...");
+  await listing.remove();
+  res.status(202).send("Removed Succfully");
+});
 module.exports = router;
