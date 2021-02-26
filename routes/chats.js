@@ -1,13 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const auth = require("../middleware/auth");
 const { User } = require("../models/users");
 const { Message } = require("../models/messages");
 const { mapImageToUrl } = require("../utilities/mapper");
 
-router.get("/", auth, async (req, res) => {
+const getChatsByUserId = async (userId) => {
   let chats = {};
-  const userId = req.user.userId;
   const messages = await Message.find({
     $or: [{ fromUserId: userId }, { toUserId: userId }],
   }).sort({ dateTime: 1 });
@@ -31,8 +27,7 @@ router.get("/", auth, async (req, res) => {
       messages: chats[contacts[i]._id],
     });
   }
+  return fullChatsData;
+};
 
-  res.status(200).send(fullChatsData);
-});
-
-module.exports = router;
+module.exports.getChatsByUserId = getChatsByUserId;

@@ -17,6 +17,7 @@ const helmet = require("helmet");
 const compression = require("compression");
 const config = require("config");
 const mongoose = require("mongoose");
+const io = require("socket.io");
 const https = require("https");
 const fs = require("fs");
 const apicache = require("apicache");
@@ -63,17 +64,40 @@ app.use("/api/subscriptions", subscriptions);
 app.use("/api/transactions", transactions);
 app.use("/api/address/", address);
 app.use("/api/checkout/", checkout);
-app.use("/api/chats/", chats);
 
 const options = {
   key: fs.readFileSync("ssl/key.pem"),
   cert: fs.readFileSync("ssl/cert.pem"),
 };
 const port = process.env.PORT || config.get("port");
-
 const server = require("http").createServer(app);
+const websocket = io(server);
+
 server.listen(port, () => console.log("server running on port:" + port));
-module.exports.server = server;
-// https
-//   .createServer(options, app)
-//   .listen(port, () => console.log(`Server started on port ${port}...`));
+//----------------------------------------
+const jwt = require("jsonwebtoken");
+
+websocket.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return;
+  try {
+    const payload = jwt.verify(token, config.get("jwtKey"));
+    socket.user = payload;
+    next();
+  } catch (err) {}
+});
+websocket.on("connection", async (socket) => {
+  const userId = socket.user.userId;
+  // console.log("a user connected", userId);
+  const usersChats = await chats.getChatsByUserId(userId);
+  socket.join(userId);
+  websocket.to(userId).emit("ExistingMessages", usersChats);
+  socket.on("send message", async (message) => {
+    //save to db
+    console.log(message);
+    websocket.to(message.toUserId).emit("receive message", message);
+  });
+});
+//------------------------------------------------------------------------
+
+module.exports.websocket = websocket;
