@@ -27,7 +27,10 @@ router.get("/send_velidation_code", [auth, reqLimits.byIp], (req, res) => {
   res.status(200).send("code sent");
 });
 
-const code_schema = { code: Joi.string().required() };
+const code_schema = {
+  code: Joi.string().required(),
+  email: Joi.string().required(),
+};
 router.post("/validate_email", validateWith(code_schema), async (req, res) => {
   const user = await User.findOne({ email: req.body.email });
   if (!user) return res.status(400).send("user not exists");
