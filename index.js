@@ -76,6 +76,7 @@ const websocket = io(server);
 server.listen(port, () => console.log("server running on port:" + port));
 //----------------------------------------
 const jwt = require("jsonwebtoken");
+const { Message } = require("./models/messages");
 
 websocket.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -92,10 +93,16 @@ websocket.on("connection", async (socket) => {
   const usersChats = await chats.getChatsByUserId(userId);
   socket.join(userId);
   websocket.to(userId).emit("ExistingMessages", usersChats);
-  socket.on("send message", async (message) => {
-    //save to db
-    console.log(message);
-    websocket.to(message.toUserId).emit("receive message", message);
+  socket.on("send message", async (message, callback) => {
+    try {
+      delete message.isSent;
+      await Message.create(message);
+      console.log(message);
+      websocket.to(message.toUserId).emit("receive message", message);
+      callback("ok");
+    } catch (err) {
+      console.log("Worng foamt", err);
+    }
   });
 });
 //------------------------------------------------------------------------

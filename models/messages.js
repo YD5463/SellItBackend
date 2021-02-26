@@ -23,6 +23,16 @@ const messageSchema = new mongoose.Schema({
     type: String,
     default: "text",
   },
+  isReceived: {
+    required: true,
+    type: Boolean,
+    default: false,
+  },
+  isSeen: {
+    required: false,
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Message = mongoose.model("Messages", messageSchema);
