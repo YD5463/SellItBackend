@@ -39,6 +39,13 @@ const listingSchema = new mongoose.Schema({
     type: locationDetailSchema,
     required: false,
   },
+  rate: {
+    type: Number,
+    required: false,
+    default: 0,
+    min: 0,
+    max: 5,
+  },
 });
 
 const Listings = mongoose.model("listings", listingSchema);
