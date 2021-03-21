@@ -42,7 +42,8 @@ router.post(
     }
     const city = await City.findOne({ name: req.body.city });
     if (!city) return res.status(404).send("No such City");
-    if (city.country !== country._id)
+    console.log(city, country);
+    if (city.country.toString() !== country._id.toString())
       return res.status(409).send("No such city in this country");
     if (state && city.state && state._id !== city.state)
       return res.status(409).send("No such city in this state");
