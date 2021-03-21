@@ -65,7 +65,7 @@ app.use("/api/subscriptions", subscriptions);
 app.use("/api/transactions", transactions);
 app.use("/api/address/", address);
 app.use("/api/checkout/", checkout);
-app.use("/api/assets/", assets);
+app.use("/", assets);
 
 const options = {
   key: fs.readFileSync("ssl/key.pem"),
@@ -105,6 +105,20 @@ websocket.on("connection", async (socket) => {
     } catch (err) {
       console.log("Worng foamt", err);
     }
+  });
+  socket.on("send file", (message, callback) => {
+    fs.writeFile(
+      "./public/assets/record.mp4",
+      message.file,
+      "base64",
+      async (err) => {
+        if (!err) return;
+        delete message.file;
+        delete message.isSent;
+        message.content = "record.mp4";
+        await Message.create(message);
+      }
+    );
   });
 });
 //------------------------------------------------------------------------
