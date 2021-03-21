@@ -10,6 +10,7 @@ const { State } = require("./models/address/states");
 const { City } = require("./models/address/cities");
 const cities = require("./seed_data/world-cities_json.json");
 const lookup = require("country-code-lookup");
+const { OrderStatus } = require("./models/orderStatus");
 
 const addressSeed = async () => {
   const promises = [];
@@ -61,6 +62,24 @@ const messagesSeed = async () => {
     dateTime: Date.now(),
   });
 };
+
+const orderStatusesSeed = async () => {
+  await OrderStatus.create({
+    name: "Delivered",
+    codeName: "D",
+    color: "green",
+  });
+  await OrderStatus.create({
+    name: "Proccessing",
+    codeName: "P",
+    color: "blue",
+  });
+  await OrderStatus.create({
+    name: "Cancelled",
+    codeName: "C",
+    color: "red",
+  });
+};
 const main = async () => {
   await mongoose.connect("mongodb://localhost:27017/SellIt", {
     useNewUrlParser: true,
@@ -74,7 +93,8 @@ const main = async () => {
   // for (let [codeName, name] of Object.entries(states)) {
   //   await State.create({ name, codeName, country: usa._id });
   //
-  await messagesSeed();
+  // await messagesSeed();
+  // await orderStatusesSeed();
   await mongoose.disconnect();
   console.log("done");
 };

@@ -32,6 +32,14 @@ const transactionSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     required: true,
   },
+  quantity: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+  },
 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
